@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router';
-import { checkLogin } from '../../components/checkLoginAdmin';
+import { checkLogin } from '../components/checkLoginUser';
+import jwtDecode from 'jwt-decode'
 import Image from 'next/image';
 
 const data_bill = () => {
@@ -8,6 +9,7 @@ const data_bill = () => {
     const { id } = router.query;
     const [bill, setBill] = useState([]);
     const [imageUrl, setImageUrl] = useState('/no_image.jpg');
+
 
     useEffect(() => {
         checkLogin();
@@ -37,6 +39,12 @@ const data_bill = () => {
             });
 
             const result = await response.json();
+
+            const decode = jwtDecode(token)
+
+            if (result.message.user_id != decode.user_id) {
+                router.push('/');
+            }
 
             if (result.status == 'success') {
                 setBill(result.message);

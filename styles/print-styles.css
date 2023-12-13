@@ -1,0 +1,18 @@
+/* print-styles.css */
+
+@media print {
+    /* Set the paper size to A5 */
+    @page {
+        size: A5;
+        margin: 0;
+    }
+
+    /* Adjust styling for printing */
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        font-size: 10pt;
+    }
+
+    /* Add any other styles specific for printing */
+}

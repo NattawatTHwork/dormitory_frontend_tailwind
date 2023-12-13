@@ -11,12 +11,18 @@ const paid = () => {
     const [bill_id, setBillID] = useState(null);
     const [status, setStatus] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         checkLogin();
         fetchBill();
         hideDropDown();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
 
     const convertTime = (isoDate) => {
         const date = new Date(isoDate);
@@ -187,25 +193,49 @@ const paid = () => {
         });
     };
 
+    const onPageChange = newPage => {
+        setCurrentPage(newPage);
+    };
+
+    const filteredPaid = paid.filter(paid =>
+        paid.name_room.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        paid.monthly.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const totalFilteredItems = filteredPaid.length;
+    const totalFilteredPages = Math.ceil(totalFilteredItems / 10);
+    const indexOfLastFilteredItem = currentPage * 10;
+    const indexOfFirstFilteredItem = indexOfLastFilteredItem - 10;
+    const currentFilteredItems = filteredPaid.slice(indexOfFirstFilteredItem, indexOfLastFilteredItem);
+
     return (
         <>
             <div className="container mx-auto p-4">
+                <div className="flex justify-end my-2">
+                    <input
+                        type="text"
+                        placeholder="Search by name..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="px-2 py-1 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-300 focus:border-indigo-300"
+                    />
+                </div>
                 <table className="min-w-full text-center">
                     <thead>
                         <tr>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">No</th>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">ROOM</th>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">DATE CREATE</th>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">MONTHLY</th>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">TOTAL PRICE</th>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">STATUS</th>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">ACTIONS</th>
+                            {/* <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">No</th> */}
+                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider w-2/12">ROOM</th>
+                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider w-4/12">DATE CREATE</th>
+                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider w-2/12">MONTHLY</th>
+                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider w-2/12">TOTAL PRICE</th>
+                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider w-1/12">STATUS</th>
+                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider w-1/12">ACTIONS</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {paid.map((mypaid, index) => (
+                        {currentFilteredItems.map((mypaid, index) => (
                             <tr key={mypaid.room_id}>
-                                <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td>
+                                {/* <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td> */}
                                 <td className="px-6 py-4 whitespace-nowrap">{mypaid.name_room}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{convertTime(mypaid.date_check_bill)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{mypaid.monthly}</td>
@@ -258,6 +288,29 @@ const paid = () => {
                         ))}
                     </tbody>
                 </table>
+                <div className="mt-4">
+                    <div className='flex justify-end my-2'>
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => onPageChange(currentPage - 1)}
+                            className="px-3 py-1 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 disabled:bg-gray-300"
+                        >
+                            Previous Page
+                        </button>
+                        <button
+                            disabled={indexOfLastFilteredItem >= totalFilteredItems}
+                            onClick={() => onPageChange(currentPage + 1)}
+                            className="ml-2 px-3 py-1 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 disabled:bg-gray-300"
+                        >
+                            Next Page
+                        </button>
+                    </div>
+                    <div className='flex justify-end my-2'>
+                        <p className="mt-2">
+                            Page {currentPage} of {totalFilteredPages}
+                        </p>
+                    </div>
+                </div>
             </div>
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">

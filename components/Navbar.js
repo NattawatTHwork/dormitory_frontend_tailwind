@@ -5,7 +5,7 @@ import jwtDecode from 'jwt-decode'
 
 const Navbar = () => {
     const [nav, setNav] = useState(false)
-    const [token, setToken] = useState('')
+    // const [token, setToken] = useState('')
     const [decodedToken, setdecodedToken] = useState('')
 
     useEffect(() => {
@@ -14,12 +14,13 @@ const Navbar = () => {
 
     const checkToken = () => {
         const myToken = localStorage.getItem('token');
-        if (myToken !== null) {
+        // if (myToken !== null) {
+        if (myToken) {
             setdecodedToken(jwtDecode(myToken));
         }
-        if (myToken) {
-            setToken(myToken);
-        }
+        // if (myToken) {
+        //     setToken(myToken);
+        // }
     }
 
     const handleNav = () => (
@@ -39,14 +40,14 @@ const Navbar = () => {
     return (
         <>
             <div className='flex justify-between items-center h-24 max-w-[1240px] mx-auto px-4 text-black'>
-                <h1 className='w-full text-3xl font-bold text-black'>QR STUDENT</h1>
-                {token && (decodedToken.role == 3 ?
-                    <ul className='hidden md:flex'>
+                <h1 className='w-full text-3xl font-bold text-black'>DORMITORY</h1>
+                {decodedToken && (decodedToken.role == 3 ?
+                    <ul className='hidden lg:flex'>
                         <li className='p-4'><Link href='/'>HOME</Link></li>
                         <li className='p-4'><Link href='/history'>HISTORY</Link></li>
                         <li className='p-4'><button onClick={handleLogout}>LOGOUT</button></li>
                     </ul> :
-                    <ul className='hidden md:flex'>
+                    <ul className='hidden lg:flex'>
                         <li className='p-4'><Link href='/admin'>HOME</Link></li>
                         <li className='p-4'><Link href='/admin/paid'>PAID</Link></li>
                         <li className='p-4'><Link href='/admin/unpaid'>UNPAID</Link></li>
@@ -56,9 +57,9 @@ const Navbar = () => {
                         <li className='p-4'><Link href='/admin/services'>SERVICES</Link></li>
                         <li className='p-4'><button onClick={handleLogout}>LOGOUT</button></li>
                     </ul>)}
-                {token && (
+                {decodedToken && (
                     <div>
-                        <div onClick={handleNav} className='block md:hidden'>
+                        <div onClick={handleNav} className='block lg:hidden'>
                             {nav ? <AiOutlineClose size={20} /> : <AiOutlineMenu size={20} />}
                         </div>
                         <div className={nav ? 'fixed left-0 top-0 w-[60%] h-full border-r border-r-gray-900 bg-white ease-in-out duration-500' : 'fixed left-[-100%] top-0 h-full w-[60%] ease-in-out duration-500'}>

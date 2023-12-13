@@ -27,7 +27,6 @@ const invoice = () => {
         first_name: '',
         last_name: ''
     })
-    console.log(formCreate)
 
     useEffect(() => {
         checkLogin();
@@ -152,7 +151,7 @@ const invoice = () => {
     return (
         <>
             <div className="flex flex-col items-center mt-10">
-                <h1 className="text-3xl font-semibold mb-6">Create Bill</h1>
+                <h1 className="text-3xl font-semibold mb-6">Issue Invoice</h1>
                 <div className="bg-white rounded-lg shadow-md p-10 hover:shadow-xl h-[200px] w-[60%]">
                     <h1 className="text-center text-2xl font-bold">{formCreate.name_room}</h1>
                     <h1 className="text-lg font-semibold">Price : {formCreate.price}</h1>

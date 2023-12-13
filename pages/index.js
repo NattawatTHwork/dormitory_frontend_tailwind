@@ -5,6 +5,10 @@ import { useRouter } from 'next/router';
 export default function Home() {
   const router = useRouter();
   const [unpaid, setunPaid] = useState([]);
+  const [dropdownStates, setDropdownStates] = useState([]);
+  const dropdownRefs = useRef([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -14,8 +18,8 @@ export default function Home() {
       }
     };
     fetchData();
+    hideDropDown();
   }, []);
-
 
   const convertTime = (isoDate) => {
     const date = new Date(isoDate);
@@ -26,6 +30,34 @@ export default function Home() {
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const seconds = date.getSeconds().toString().padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  const hideDropDown = () => {
+    const handleClickOutside = (e) => {
+      dropdownRefs.current.forEach((ref, index) => {
+        if (ref && !ref.contains(e.target)) {
+          setDropdownStates((prevStates) => {
+            const newStates = [...prevStates];
+            newStates[index] = false;
+            return newStates;
+          });
+        }
+      });
+    };
+
+    window.addEventListener('click', handleClickOutside);
+
+    return () => {
+      window.removeEventListener('click', handleClickOutside);
+    };
+  };
+
+  const handleDropDown = (index) => {
+    setDropdownStates((prevStates) => {
+      const newStates = [...prevStates];
+      newStates[index] = !newStates[index];
+      return newStates;
+    });
   };
 
   const fetchBill = async (user_id) => {
@@ -51,13 +83,47 @@ export default function Home() {
     }
   };
 
-  const handleView = () => {
-    router.push('/data_bill');
+  const handleViewData = (bill_id) => {
+    router.push({
+      pathname: '/data_bill',
+      query: { id: bill_id },
+    });
   }
+
+  const handlePay = (bill_id) => {
+    router.push({
+      pathname: '/pay',
+      query: { id: bill_id },
+    });
+  }
+
+  const onPageChange = newPage => {
+    setCurrentPage(newPage);
+  };
+
+  const filteredunPaid = unpaid.filter(unpaid =>
+    unpaid.name_room.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    unpaid.monthly.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const totalFilteredItems = filteredunPaid.length;
+  const totalFilteredPages = Math.ceil(totalFilteredItems / 10);
+  const indexOfLastFilteredItem = currentPage * 10;
+  const indexOfFirstFilteredItem = indexOfLastFilteredItem - 10;
+  const currentFilteredItems = filteredunPaid.slice(indexOfFirstFilteredItem, indexOfLastFilteredItem);
 
   return (
     <>
       <div className="container mx-auto p-4">
+        <div className="flex justify-end my-2">
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="px-2 py-1 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-300 focus:border-indigo-300"
+          />
+        </div>
         <table className="min-w-full text-center">
           <thead>
             <tr>
@@ -67,11 +133,11 @@ export default function Home() {
               <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">MONTHLY</th>
               <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">TOTAL PRICE</th>
               <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">STATUS</th>
-              <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">VIEW</th>
+              <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">ACTIONS</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {unpaid.map((myunpaid, index) => (
+          {currentFilteredItems.map((myunpaid, index) => (
               <tr key={myunpaid.room_id}>
                 <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{myunpaid.name_room}</td>
@@ -84,16 +150,66 @@ export default function Home() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <button onClick={handleView} className='px-4 py-2 border rounded font-medium text-gray-600 transition duration-150 ease-in-out hover:text-gray-800 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-800'>
-                    View
+                  <button
+                    ref={(ref) => (dropdownRefs.current[index] = ref)}
+                    onClick={() => handleDropDown(index)}
+                    type="button"
+                    className="px-4 py-2 border rounded font-medium text-gray-600 transition duration-150 ease-in-out hover:text-gray-800 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-800"
+                  >
+                    Option
                   </button>
+                  {dropdownStates[index] && (
+                    <div className="flex justify-center">
+                      <div className="origin-top-right absolute mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                          <a
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            role="menuitem"
+                            onClick={() => handleViewData(myunpaid.bill_id)}
+                          >
+                            View Data
+                          </a>
+                          <a
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            role="menuitem"
+                            onClick={() => handlePay(myunpaid.bill_id)}
+                          >
+                            Pay
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </td>
+
               </tr>
             ))}
           </tbody>
         </table>
+        <div className="mt-4">
+          <div className='flex justify-end my-2'>
+            <button
+              disabled={currentPage === 1}
+              onClick={() => onPageChange(currentPage - 1)}
+              className="px-3 py-1 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 disabled:bg-gray-300"
+            >
+              Previous Page
+            </button>
+            <button
+              disabled={indexOfLastFilteredItem >= totalFilteredItems}
+              onClick={() => onPageChange(currentPage + 1)}
+              className="ml-2 px-3 py-1 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 disabled:bg-gray-300"
+            >
+              Next Page
+            </button>
+          </div>
+          <div className='flex justify-end my-2'>
+            <p className="mt-2">
+              Page {currentPage} of {totalFilteredPages}
+            </p>
+          </div>
+        </div>
       </div>
     </>
   )
-
 }

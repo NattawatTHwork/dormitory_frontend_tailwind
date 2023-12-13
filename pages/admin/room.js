@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { checkLogin } from '../../components/checkLoginAdmin';
 import Swal from 'sweetalert2';
+import Select from 'react-select';
 
 const room = () => {
     const router = useRouter();
@@ -55,7 +55,11 @@ const room = () => {
             const result = await response.json();
 
             if (result.status == 'success') {
-                setUsers(result.message);
+                const userOptions = result.message.map((user) => ({
+                    value: user.user_id,
+                    label: user.first_name + ' ' + user.last_name,
+                }));
+                setUsers(userOptions);
             } else {
                 console.log('fetch data admin failed')
             }
@@ -133,7 +137,7 @@ const room = () => {
                                 Manage User
                             </button>
                             <button onClick={() => handleInvoice(room.room_id)} className={`flex-1 text-white font-semibold py-2 px-4 rounded-lg mx-1 ${!room.first_name ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`} disabled={!room.first_name}>
-                                Invoice
+                                Issue Invoice
                             </button>
                         </div>
                     </div>
@@ -144,17 +148,11 @@ const room = () => {
                     <div className="bg-black opacity-50 fixed inset-0"></div>
                     <div className="bg-white p-6 rounded shadow-md relative w-[50%]">
                         <h2 className="text-lg font-semibold mb-4">Manage User</h2>
-                        <select
-                            value={user_id}
-                            onChange={(e) => setUserID(e.target.value)}
-                            className="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-300 focus:border-indigo-300">
-                            <option value="">No User</option>
-                            {users.map((user) => (user.status == 1 && (
-                                <option key={user.user_id} value={user.user_id}>
-                                    {user.first_name + ' ' + user.last_name}
-                                </option>
-                            )))}
-                        </select>
+                        <Select
+                            defaultValue={{ value: room.user_id, label: room.first_name && (room.first_name + ' ' + room.last_name) }}
+                            onChange={(e) => setUserID(e.value)}
+                            options={users}
+                        />
                         <div className="flex justify-end mt-4">
                             <button
                                 className="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 hover:text-gray-100 transition duration-150 ease-in-out"

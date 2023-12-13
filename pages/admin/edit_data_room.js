@@ -64,21 +64,21 @@ const edit_data_admin = () => {
             if (result.status == 'success') {
                 await Swal.fire({
                     icon: 'success',
-                    title: 'Registration successful',
-                    text: 'You have been registered successfully.',
+                    title: 'Update successful',
+                    text: 'You have been update successfully.',
                 });
                 fetchRoom()
-            } else if (result.status === 'exists') {
-                await Swal.fire({
-                    icon: 'error',
-                    title: result.message,
-                    text: 'Please use another username that has not been registered yet.',
-                });
+            // } else if (result.status === 'exists') {
+            //     await Swal.fire({
+            //         icon: 'error',
+            //         title: result.message,
+            //         text: 'Please use another username that has not been registered yet.',
+            //     });
             } else {
                 await Swal.fire({
                     icon: 'error',
-                    title: 'Registration failed',
-                    text: 'There was an error during registration.',
+                    title: 'Update failed',
+                    text: 'There was an error during update.',
                 });
             }
         } catch (error) {

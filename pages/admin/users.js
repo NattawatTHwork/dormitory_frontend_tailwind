@@ -11,12 +11,18 @@ const users = () => {
     const [user_id, setUserID] = useState(null);
     const [status, setStatus] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         checkLogin();
         fetchUsers();
         hideDropDown();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
 
     const fetchUsers = async () => {
         try {
@@ -179,6 +185,21 @@ const users = () => {
         router.push('/admin/create_user');
     }
 
+    const onPageChange = newPage => {
+        setCurrentPage(newPage);
+    };
+
+    const filteredUsers = users.filter(user =>
+        user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.last_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const totalFilteredItems = filteredUsers.length;
+    const totalFilteredPages = Math.ceil(totalFilteredItems / 10);
+    const indexOfLastFilteredItem = currentPage * 10;
+    const indexOfFirstFilteredItem = indexOfLastFilteredItem - 10;
+    const currentFilteredItems = filteredUsers.slice(indexOfFirstFilteredItem, indexOfLastFilteredItem);
+
     return (
         <>
             <div className="container mx-auto p-4">
@@ -188,19 +209,29 @@ const users = () => {
                     </button>
                 </div>
 
+                <div className="flex justify-end my-2">
+                    <input
+                        type="text"
+                        placeholder="Search by name..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="px-2 py-1 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-300 focus:border-indigo-300"
+                    />
+                </div>
+
                 <table className="min-w-full text-center">
                     <thead>
                         <tr>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">No</th>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">NAME</th>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">STATUS</th>
-                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">ACTIONS</th>
+                            {/* <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">No</th> */}
+                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider w-1/2">NAME</th>
+                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider w-1/4">STATUS</th>
+                            <th className="px-6 py-3 bg-gray-100 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider w-1/4">ACTIONS</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {users.map((user, index) => (
+                        {currentFilteredItems.map((user, index) => (
                             <tr key={user.user_id}>
-                                <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td>
+                                {/* <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td> */}
                                 <td className="px-6 py-4 whitespace-nowrap">{user.first_name + ' ' + user.last_name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`${user.status === 1 ? 'bg-green-500' : 'bg-red-500'} p-2 rounded text-white`}>
@@ -257,6 +288,29 @@ const users = () => {
                         ))}
                     </tbody>
                 </table>
+                <div className="mt-4">
+                    <div className='flex justify-end my-2'>
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => onPageChange(currentPage - 1)}
+                            className="px-3 py-1 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 disabled:bg-gray-300"
+                        >
+                            Previous Page
+                        </button>
+                        <button
+                            disabled={indexOfLastFilteredItem >= totalFilteredItems}
+                            onClick={() => onPageChange(currentPage + 1)}
+                            className="ml-2 px-3 py-1 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 disabled:bg-gray-300"
+                        >
+                            Next Page
+                        </button>
+                    </div>
+                    <div className='flex justify-end my-2'>
+                        <p className="mt-2">
+                            Page {currentPage} of {totalFilteredPages}
+                        </p>
+                    </div>
+                </div>
             </div>
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
